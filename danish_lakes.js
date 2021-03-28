@@ -1,3 +1,5 @@
+// version = 0.0.1
+// App = https://oztasbaris12.users.earthengine.app/view/danish-lakes
 
 function area_of_interest(dataset, string){
 	var aoi = dataset.filter(ee.Filter.eq('country_na', string));
