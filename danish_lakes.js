@@ -1,6 +1,14 @@
 // version = 0.0.1
 // App = https://oztasbaris12.users.earthengine.app/view/danish-lakes
 
+var L8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
+    dataset = ee.FeatureCollection("USDOS/LSIB_SIMPLE/2017"),
+    rgb_vis = {"opacity":1,"bands":["B4","B3","B2"],"min":-607.027817603207,"max":1474.2185690482938,"gamma":1},
+    mndwi_vis = {"opacity":1,"bands":["MNDWI"],"palette":["ff0000","1000ff"]},
+    ndvi_vis = {"opacity":1,"bands":["NDVI"],"palette":["ff0000","ffa500","00ff14"]},
+    mask = ee.FeatureCollection("users/oztasbaris12/Danish_lakes/Mask_shapefile/danish_mask"),
+    table2 = ee.FeatureCollection("users/oztasbaris12/Danish_lakes/Mask_shapefile/danish_samples");
+
 function area_of_interest(dataset, string){
 	var aoi = dataset.filter(ee.Filter.eq('country_na', string));
 	Map.centerObject(aoi,7.3);
