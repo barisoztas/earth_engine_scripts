@@ -1,5 +1,6 @@
-// version = 0.0.2
+// version = 0.0.3
 // App = https://oztasbaris12.users.earthengine.app/view/danish-lakes
+
 
 var L8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
     dataset = ee.FeatureCollection("USDOS/LSIB_SIMPLE/2017"),
@@ -13,28 +14,29 @@ var L8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
     vh_vis = {"opacity":1,"bands":["VH"],"min":-29.920891753796575,"max":-12.726552611079589,"gamma":1},
     vv_vis = {"opacity":1,"bands":["VV"],"min":-21.733165202492494,"max":9.709049077231972,"gamma":1};
 
+
 function area_of_interest(dataset, string){
-	var aoi = dataset.filter(ee.Filter.eq('country_na', string));
-	Map.centerObject(aoi,7.3);
-	return aoi
+  var aoi = dataset.filter(ee.Filter.eq('country_na', string));
+  Map.centerObject(aoi,7.3);
+  return aoi
 }
 function filtering_image_collection(image_dataset, mask, cloud_cover, start_date, end_date){
-	var image_dataset = L8.filterBounds(mask)
+  var image_dataset = L8.filterBounds(mask)
 .filterMetadata('CLOUD_COVER_LAND', 'less_than', cloud_cover)
 .filterDate(start_date, end_date);
-	print('Size of filtered data is', image_dataset.size())
-	return image_dataset
+  print('Size of filtered data is', image_dataset.size())
+  return image_dataset
 }
 function median(image_dataset) {
-	var median_image = image_dataset.median();
-	return median_image
+  var median_image = image_dataset.median();
+  return median_image
 }
 function add_symbology(image, parameters, string, shown){
-	Map.addLayer(image, parameters, string, shown);
+  Map.addLayer(image, parameters, string, shown);
 }
 function MNDWI_NDVI_composite (NDVI, MNDWI, water_threshold, vegatation_threshold){
-	var binary = MNDWI.gte(water_threshold).and(NDVI.lte(vegatation_threshold));
-	return binary
+  var binary = MNDWI.gte(water_threshold).and(NDVI.lte(vegatation_threshold));
+  return binary
 }
 function polygonize(image, mask){
   var lake_polygon = image.reduceToVectors({
@@ -141,17 +143,17 @@ checkbox_lake_polygons.onChange(function(checked) {
 });
 
 var cloud_cover_slider = ui.Slider({
-	min: 0, max: 100, step: 1, value: 50,
-	style: {stretch: 'horizontal', width: '300px' },
-	onChange:function(value){
-		cloud_cover = value;
-	},
-	disabled:true
-	});
+  min: 0, max: 100, step: 1, value: 50,
+  style: {stretch: 'horizontal', width: '300px' },
+  onChange:function(value){
+    cloud_cover = value;
+  },
+  disabled:true
+  });
 // cloud_cover_slider.setValue(10); // Default cloud cover score
 // cloud_cover_slider.onChange(function(value) {
-//	cloud_cover = value;
-//	}); 
+//  cloud_cover = value;
+//  }); 
 
 
 
@@ -226,4 +228,3 @@ checkbox_s1_polygons.onChange(function(checked) {
 controlPanel.add(checkbox_vh)
 controlPanel.add(checkbox_vv)
 controlPanel.add(checkbox_s1_polygons)
-
