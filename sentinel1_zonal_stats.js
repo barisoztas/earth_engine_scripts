@@ -75,6 +75,5 @@ print(area_data.flatten())
 
 Export.table.toDrive({
   collection: area_data.flatten(),
-  description: 'Area_data',
-  scale: 10 
+  description: 'Area_data_200m'
  })
