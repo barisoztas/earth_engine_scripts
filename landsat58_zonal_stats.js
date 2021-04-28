@@ -1,3 +1,6 @@
+// Author: Baris Oztas - baris.oztas@metu.edu.tr
+
+
 var Landsat8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
     Landsat5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR"),
     all_lakes = ee.FeatureCollection("users/oztasbaris12/Danish_lakes/Mask_shapefile/updated_mask"),
