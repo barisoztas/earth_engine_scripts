@@ -1,19 +1,17 @@
-// version = 0.0.3
-// App = https://oztasbaris12.users.earthengine.app/view/danish-lakes
-
+// version = 0.1.0
+// Script = https://code.earthengine.google.com/fab5c92207ab606621e6283b8d2b9bc5
 
 var L8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
     dataset = ee.FeatureCollection("USDOS/LSIB_SIMPLE/2017"),
     rgb_vis = {"opacity":1,"bands":["B4","B3","B2"],"min":-607.027817603207,"max":1474.2185690482938,"gamma":1},
     mndwi_vis = {"opacity":1,"bands":["MNDWI"],"palette":["ff0000","1000ff"]},
     ndvi_vis = {"opacity":1,"bands":["NDVI"],"palette":["ff0000","ffa500","00ff14"]},
-    mask = ee.FeatureCollection("users/oztasbaris12/Danish_lakes/Mask_shapefile/danish_mask"),
     table2 = ee.FeatureCollection("users/oztasbaris12/Danish_lakes/Mask_shapefile/danish_samples"),
     sentinel1 = ee.FeatureCollection("users/oztasbaris12/Sentinel1/Denmark/S1_20150503"),
     S1 = ee.ImageCollection("COPERNICUS/S1_GRD"),
     vh_vis = {"opacity":1,"bands":["VH"],"min":-29.920891753796575,"max":-12.726552611079589,"gamma":1},
-    vv_vis = {"opacity":1,"bands":["VV"],"min":-21.733165202492494,"max":9.709049077231972,"gamma":1};
-
+    vv_vis = {"opacity":1,"bands":["VV"],"min":-21.733165202492494,"max":9.709049077231972,"gamma":1},
+    mask = ee.FeatureCollection("users/oztasbaris12/Danish_lakes/Mask_shapefile/updated_mask");
 
 function area_of_interest(dataset, string){
 	var aoi = dataset.filter(ee.Filter.eq('country_na', string));
@@ -34,21 +32,21 @@ function mean(image_dataset) {
 function add_symbology(image, parameters, string, shown){
 	Map.addLayer(image, parameters, string, shown);
 }
-function MNDWI_NDVI_composite (NDVI, MNDWI, water_threshold, vegatation_threshold){
-	var binary = MNDWI.gte(water_threshold).and(NDVI.lte(vegatation_threshold));
+function MNDWI_NDVI_composite (MNDWI, water_threshold){
+	var binary = MNDWI.gte(water_threshold);
 	return binary
 }
 function polygonize(image, mask){
   var lake_polygon = image.reduceToVectors({
     geometry: mask,
   crs: 'EPSG:32632',
-  scale:7
+  scale:30
   })
   return lake_polygon
 }
 
-var start_date  = "2020-05-01";
-var end_date    = "2020-05-31";
+var start_date  = "2020-06-01";
+var end_date    = "2020-06-15";
 var cloud_cover = 5;
 var aoi = 'Denmark';
 var denmark = area_of_interest(dataset, aoi);
@@ -57,7 +55,8 @@ print(filtered_image_collection)
 var mean_image = mean(filtered_image_collection);
 var MNDWI = mean_image.normalizedDifference(['B3','B6']).rename('MNDWI');
 var NDVI = mean_image.normalizedDifference(['B5','B4']).rename('NDVI');
-var binary = MNDWI_NDVI_composite(NDVI,MNDWI, 0, 0);
+var binary = MNDWI_NDVI_composite(MNDWI, 0);
+var binary = binary.updateMask(binary.eq(1))
 var lake_polygon = polygonize(binary.clip(mask), mask);
 
 
@@ -74,7 +73,7 @@ var instructions= ui.Label(
   "from Landsat 8 - Sentinel 1/2 images.\n"+
   "Note: Sentinel 1/2 is not implemented yet."+
   "\n\n"+
-  "Thşngs that Will be available soon:\n\n"+
+  "Things that will be available soon:\n\n"+
   "1. Charts for area change over years(1984-2020)\n"+
   "2. Clickable lake objects for more information\n"+
   "...about that lake.\n"+
@@ -172,7 +171,7 @@ add_symbology(MNDWI, mndwi_vis, 'MNDWI', 1);
 add_symbology(mean_image, rgb_vis, 'Mean Image',1);
 add_symbology(lake_polygon, null, 'Lake Polygons',1)
 Map.addLayer(table2, {color: 'FF0000'}, 'Lake Dataset');
-Map.addLayer(sentinel1, {color: '0000FF'}, 'Sentinel 1 Lake Polygons')
+Map.addLayer(sentinel1, {color: '0000FF'}, 'Sentinel 1 Lake Polygons',0)
 
 //////////////////////////// SENTINEL1 PART ////////////////////////////////
 
@@ -198,11 +197,11 @@ var sar_filtered_vh = S1
 
 // Display as a composite of polarization and backscattering characteristics.
 
-Map.addLayer(sar_filtered_vv,vv_vis,'Polarization: VV_db');
-Map.addLayer(sar_filtered_vh,vh_vis, 'Polarization: VH_db')
+Map.addLayer(sar_filtered_vv,vv_vis,'Polarization: VV_db',0);
+Map.addLayer(sar_filtered_vh,vh_vis, 'Polarization: VH_db',0)
 
 
-var checkbox_vv = ui.Checkbox('Show VV Polarization', true);
+var checkbox_vv = ui.Checkbox('Show VV Polarization', false);
 
 checkbox_vv.onChange(function(checked) {
   // Shows or hides the first map layer based on the checkbox's value.
@@ -210,14 +209,14 @@ checkbox_vv.onChange(function(checked) {
 });
 
 
-var checkbox_vh = ui.Checkbox('Show VH Polarization', true);
+var checkbox_vh = ui.Checkbox('Show VH Polarization', false);
 
 checkbox_vh.onChange(function(checked) {
   // Shows or hides the first map layer based on the checkbox's value.
   Map.layers().get(8).setShown(checked);
 });
 
-var checkbox_s1_polygons = ui.Checkbox('Show Sentinel 1 Polygon', true);
+var checkbox_s1_polygons = ui.Checkbox('Show Sentinel 1 Polygon', false);
 
 checkbox_s1_polygons.onChange(function(checked) {
   // Shows or hides the first map layer based on the checkbox's value.
@@ -228,4 +227,5 @@ checkbox_s1_polygons.onChange(function(checked) {
 controlPanel.add(checkbox_vh)
 controlPanel.add(checkbox_vv)
 controlPanel.add(checkbox_s1_polygons)
+
 
